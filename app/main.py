@@ -7,8 +7,6 @@ from enum import Enum
 from typing import List, Dict, Set, Optional, Literal, Union
 from ipaddress import IPv4Address
 
-app = FastAPI()
-
 class Status(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
@@ -48,18 +46,20 @@ class Event(BaseModel):
     # Nested
     metadata: Metadata
 
-    @app.post("/events")
-    async def create(event: Event):
-        return event
+app = FastAPI()
 
-    @app.get("/")
-    async def read_root():
-        return {"Hello": "World"}
+@app.post("/events")
+async def create(event: Event):
+    return event
 
-    @app.get("/items/{item_id}")
-    def read_item(item_id: int, q: str | None = None):
-        return {"item_id": item_id, "q": q}
-    
-    @app.get("/health")
-    def check_health():
-        return "u good my boi"
+@app.get("/")
+async def read_root():
+    return {"Hello": "World"}
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+
+@app.get("/health")
+def check_health():
+    return "u good my boi"
