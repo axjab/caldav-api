@@ -1,44 +1,66 @@
+
 import jwt
-from pydantic   import BaseModel    # type: ignore
+from fastapi    import security, Depends
 from pwdlib     import PasswordHash # type: ignore
+from pydantic   import BaseModel    # type: ignore
+from typing     import Annotated
+from datetime   import datetime, timezone, timedelta
 from models     import User
 
-# TODO: Move these to a .env file and load them securely
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme = security.OAuth2PasswordBearer(tokenUrl="token")
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-class Auth:
+class Authenticator:
 
-    def __init__(self):
+    def __init__(self,
+            user_db,
+            secret_key,
+            token_timedelta = timedelta(minutes=30),
+            signing_algorithm = "HS256",
+        ):
         self.password_hash = PasswordHash.recommended()
+        self.user_database = user_db
+        self.secret_key    = secret_key
+        self.algorithm     = signing_algorithm
+        self.token_dt      = token_timedelta
 
-    def authenticate_user(self, users_data, username: str, password: str):
-        user = self.get_user(users_data, username)
-        if not user:
-            return False
-        if not self.verify_password(password, user.hashed_password):
-            return False
+    def authenticate_user(self, username: str, password: str) -> User | None:
+        user = self.get_user(username)
+        if not user: return None
+        if not self.is_pass_correct(password, user.hash): return None
         return user
 
-    def verify_password(self, plain_password, hashed_password):
-        return self.password_hash.verify(plain_password, hashed_password)
+    def get_token(self, username: str) -> Token:
+        payload = {
+            "sub": username,
+            "exp": datetime.now(timezone.utc) + self.token_dt
+        }
+        token = jwt.encode(
+            payload,
+            self.secret_key,
+            self.algorithm
+        )
+        return Token(access_token=token,token_type="bearer")
 
-    def create_access_token(self, data: dict, expires_delta: timedelta | None = None):
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        return encoded_jwt
+    async def get_current_user(self, token: Annotated[str, Depends(oauth2_scheme)]) -> User | None:
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            username = payload.get("sub")
+            if username is None:
+                return None
+            user = self.get_user(username)
+            return user if user else None
+        except jwt.exceptions.InvalidTokenError as e: # need to run uv pip install pyjwt to make this Exception available
+            print(e)
+            return None
     
-    def get_user(db, username: str):
-        if username in db:
-            user_dict = db[username]
+    def get_user(self, username: str) -> User | None:
+        if username in self.user_database:
+            user_dict = self.user_database[username]
             return User(**user_dict)
+
+    def is_pass_correct(self, password, hash) -> bool:
+            return self.password_hash.verify(password, hash)
