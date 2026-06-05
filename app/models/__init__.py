@@ -1,6 +1,5 @@
+from .caldav_config import CalDAVConfig
 from .event import Event
-from .event import Status
-from .event import Metadata
+from .user import User
 
-__all__ = ["Event", "Status", "Metadata"]
-
+__all__ = ["CalDAVConfig", "Event", "User"]
