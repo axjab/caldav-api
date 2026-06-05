@@ -11,7 +11,7 @@ conf = Configurator(
     # USER=ahmad
     # PASS=test
 )
-auth = Authenticator( # should I pass key-pairs or the entire conf instead?
+auth = Authenticator(
     user_db=conf.user_database,
     secret_key=conf.secret_key
 )
