@@ -5,15 +5,9 @@ from models     import CalDAVConfig, User
 from config     import Configurator
 from security   import Authenticator, Token
 
-conf = Configurator(
-    # USE THE FOLLOWING FOR TESTING:
-    # CALDAV_SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-    # USER=ahmad
-    # PASS=test
-)
+conf = Configurator()
 auth = Authenticator(
-    user_db=conf.user_database,
-    secret_key=conf.secret_key
+    # what is my purpose?
 )
 app = FastAPI()
 
@@ -79,18 +73,17 @@ async def test_davclient(config: CalDAVConfig):
 
 @app.post("/calendar/{name}")
 async def create_calendar(
-    credentials:CalDAVConfig,
-    name: str
+    key: Annotated[User, Depends(THE FUCKING API KEY)],
+    name: str,
 ):
     """
     Create a calendar on a CalDAV server using the provided credentials and calendar name.
     """
     try:
-        # TODO: USE FASTAPI SECURITY, DO NOT TAKE CREDENTIALS IN THE BODY LIKE THIS
         client = await aio.get_async_davclient(
-            url=credentials.url,
-            username=credentials.username,
-            password=credentials.password,
+            url=conf.caldav_url,
+            username=conf.username,
+            password=conf.password,
             features="radicale"
         )
 
@@ -102,7 +95,7 @@ async def create_calendar(
             return {
                 "status": "created",
                 "url": "???",
-                "name": name
+                "name": calendar_name
             }
 
     except Exception as e:

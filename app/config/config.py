@@ -1,14 +1,24 @@
 from os       import getenv
 from security import users
 
+# EXPLANATION:
+# THE GATEWAY IS STATELESS IN THE HTTP SENSE:
+# NO CLIENT SESSIONS, NO SERVER-SIDE STATE PER REQUEST.
+# HOWEVER, IT IS NOT "CONFIGURATIONLESS" — IT IS BOUND AT
+# DEPLOYMENT TO A SPECIFIC CALDAV INSTANCE VIA ENVIRONMENT
+# CONFIGURATION, NOT CLIENT-SUPPLIED CREDENTIALS.
+# THE CLIENT AUTHENTICATES TO THE GATEWAY (API KEY).
+# THE GATEWAY AUTHENTICATES TO THE CALDAV SERVER (STORED CREDS).
+# THESE ARE TWO SEPARATE SECURITY DOMAINS.
+
+
 class Configurator:
     def __init__(self):
-        self.secret_key = load_env("CALDAV_SECRET_KEY", required=True, validator=lambda v: len(v) >= 32)
-        self.users_file = load_file("CALDAV_USERS_FILE")
-        self.user_database = users # placeholder
-        self.a = load_env("AAAAAAAAAAA")
-        self.b = load_env("BBBBBBBBBBBBBBBBB")
-        self.c = load_env("CCCCCCCCCCCCCCCCCCCCCC")
+        self.caldav_url = load_env("CALDAV_URL", required=True)
+        self.username   = load_env("CALDAV_USER", required=True)
+        self.password   = load_env("CALDAV_PASS", required=True)
+        # do i need this?
+        # self.secret_key = load_env("CALDAV_SECRET_KEY", required=True, validator=lambda v: len(v) >= 32)
 
 def load_env(key:str, required=False, validator=None):
     value = getenv(key)
