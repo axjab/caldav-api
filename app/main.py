@@ -1,12 +1,14 @@
-from fastapi    import FastAPI              # type: ignore
+from datetime import timedelta
+
+from fastapi    import FastAPI, Depends, HTTPException, status  # type: ignore
+from fastapi.security import OAuth2PasswordRequestForm # type: ignore
 from caldav     import aio                  # type: ignore
+from typing     import Annotated
 from models     import CalDAVConfig, Event
+from security   import Auth, Token, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, users
 
 app = FastAPI()
-
-@app.get("/")
-async def read_root():
-    return check_health()
+auth = Auth()
 
 @app.get("/health")
 def check_health():
@@ -17,6 +19,25 @@ def get_random():
     # geenrate random object
     import random
     return {"random_number": random.randint(1, 100)}
+
+# SECURITY =============================================v
+@app.post("/token")
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> Token:
+    user = auth.authenticate_user(users_data=users, username=form_data.username, password=form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+# SECURITY =============================================^
 
 @app.post("/test-client")
 async def test_davclient(config: CalDAVConfig):
