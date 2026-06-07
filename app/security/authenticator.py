@@ -8,15 +8,12 @@ class Authenticator:
     def __init__(self, api_key:str):
         self.header_scheme = security.APIKeyHeader(name="X-API-Key", auto_error=False)
         self.api_key = api_key
-
-    def verify_key(self):
-        """Returns a dependency callable. Ref: https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-in-path-operation-decorators/"""
-        async def _verify(key: str = Depends(self.header_scheme)):
+    
+    def __call__(self) -> Depends:
+        """Returns the dependency OBJECT (fastapi.Depends)."""
+        async def verify_key(key: str = Depends(self.header_scheme)):
             if not key or not compare_digest(key, self.api_key):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid API key",
-                    headers={"WWW-Authenticate": "API key"}
-                )
-            return True
-        return _verify
+                raise HTTPException(status_code=401, detail="Invalid API key")  # This is a CRITICAL line which protects my endpoint. Without it, access is granted REGARDLESS of return value.
+            return True  # this return value is meaningless in this context
+        
+        return Depends(verify_key)

@@ -1,11 +1,12 @@
-from fastapi    import FastAPI, Depends, HTTPException, status  # type: ignore
-from caldav     import aio                  # type: ignore
-from typing     import Annotated
-from models     import Event
+from fastapi    import FastAPI  # type: ignore
+from caldav     import aio      # type: ignore
+from utils      import Logger
 from config     import Configurator
 from security   import Authenticator
 from services   import CalDAVService
+from models     import Event
 
+log  = Logger(name="uvicorn", color="green")
 conf = Configurator()
 auth = Authenticator(conf.api_key)
 caldav = CalDAVService(
@@ -18,21 +19,20 @@ app = FastAPI(title="CalDAV API")
 
 @app.get("/health")
 def check_health():
+    log("health")
     return {"status": "ok", "message": "u good my boi"}
 
 @app.get("/random")
 def get_random():
     import random
+    log("random")
     return {"random_number": random.randint(1, 100)}
 
-# SECURITY =============================================v
-
-@app.get("/auth", dependencies=[Depends(auth.verify_key())])
-async def auth_test():
+@app.get("/auth", dependencies=[auth()])  # example: dependencies=[auth(), limit(), audit(), log(), etc.]
+async def test_auth():
     """Test endpoint to verify API key authentication."""
+    log("AUTHORIZED")
     return {"status": "ok", "message": "API key is valid!"}
-
-# SECURITY =============================================^
 
 @app.post("/test-client")
 async def test_davclient():
@@ -40,50 +40,21 @@ async def test_davclient():
     Test creating an async DAVClient from explicit config.
     """
     try:
-        client = await aio.get_async_davclient(**config.model_dump(exclude_none=True))
-        
-        if client is None:
-            return {"status": "error", "message": "Failed to create DAVClient with provided config."}
-
-        my_principal = await client.get_principal()
+        client = await caldav.get_davclient()
         return {
             "status": "ok",
             "message": "Successfully created DAVClient with provided config.",
             "client_type": type(client).__name__,
-            "url": str(client.url),
-            "principal_url": str(my_principal.url) if my_principal else None,
+            "url": str(client.url)
         }
-        
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.post("/calendar/{name}", )
+@app.post("/calendar/{name}", dependencies=[auth()])
 async def create_calendar(name: str):
-    """
-    ?
-    """
-
-    try:
-        client = await aio.get_async_davclient(
-            url=conf.caldav_url,
-            username=conf.username,
-            password=conf.password,
-            features="radicale"
-        )
-
-        async with client:
-            principal = await client.get_principal()
-            new_calendar = await principal.make_calendar(name=name)
-
-            # TODO: Return canonical Calendar object
-            return {
-                "status": "created",
-                "url": "???",
-                "name": calendar_name
-            }
-
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    result = await caldav.create_calendar(name)
+    log(f"Created new calendar {name}")
+    # return result
 
 @app.get("/calendars")
 async def list_calendars():
