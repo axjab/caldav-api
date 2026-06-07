@@ -34,6 +34,24 @@ class CalDAVService:
             self.principal = await client.get_principal()
         return self.principal
     
+    async def get_calendars(self):
+        p = await self.get_principal()
+        calendars = await p.calendars()
+        return {
+            "calendars": [
+                {
+                    "name": await cal.get_display_name(),
+                    "url": cal.url.url_raw
+                }
+                for cal in calendars
+            ]
+        }
+    
+    async def get_calendar(self):
+        calendars = await self.get_calendars()
+        log(dir(calendars[0]))
+        return {"x":"FUCK"}
+    
     async def create_calendar(self, name:str):
         p = await self.get_principal()
         cal = await p.make_calendar(name)

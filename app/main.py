@@ -6,6 +6,9 @@ from security   import Authenticator
 from services   import CalDAVService
 from models     import Event
 
+# TODO:
+# 1. Check connection on startup
+
 log  = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
 conf = Configurator()
 auth = Authenticator(conf.api_key)
@@ -33,7 +36,7 @@ async def test_auth():
     log("AUTHORIZED")
     return {"status": "ok", "message": "API key is valid!"}
 
-@app.post("/test-client", dependencies=[auth()])
+@app.post("/test-client")  # is it safe without auth?
 async def test_davclient():
     """
     Test creating an async DAVClient from explicit config.
@@ -49,48 +52,18 @@ async def test_davclient():
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/calendars", dependencies=[auth()])
+async def list_calendars():
+    result = await caldav.get_calendars()
+    return result
+
+@app.get("/calendar", dependencies=[auth()])
+async def get_calendar():
+    result = await caldav.get_calendar()
+    return result
+
 @app.post("/calendar/{name}", dependencies=[auth()])
 async def create_calendar(name: str):
     result = await caldav.create_calendar(name)
     log(f"Created new calendar {name}")
     return result
-
-@app.get("/calendars")
-async def list_calendars():
-    """
-    List calendars on a CalDAV server using the provided credentials.
-    """
-    try:
-        async with await aio.get_calendars() as calendars:
-            for calendar in calendars:
-                print(f"Calendar \"{await calendar.get_display_name()}\" has URL {calendar.url}")
-        
-        return {
-            "status": "ok",
-            "message": "Successfully listed calendars. Check server logs for details."
-        }
-
-        # client = await aio.get_async_davclient(
-        #     url=credentials.url,
-        #     username=credentials.username,
-        #     password=credentials.password,
-        #     features="radicale"
-        # )
-
-        # async with client:
-        #     principal = await client.get_principal()
-        #     calendars = await principal.calendars()
-
-        #     return {
-        #         "status": "ok",
-        #         "calendars": [
-        #             {
-        #                 "name": calendar.name,
-        #                 "url": str(calendar.url)
-        #             }
-        #             for calendar in calendars
-        #         ]
-        #     }
-
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
