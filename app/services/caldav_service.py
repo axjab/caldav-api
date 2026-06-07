@@ -25,15 +25,16 @@ class CalDAVService:
                 password=self.password,
                 features=self.features
             )
+        log(f"Connected to {self.url}")
         return self.davclient
     
     async def get_principal(self):
         if self.principal is None:
-            client = self.get_davclient()
+            client = await self.get_davclient()
             self.principal = await client.get_principal()
         return self.principal
     
     async def create_calendar(self, name:str):
         p = await self.get_principal()
         cal = await p.make_calendar(name)
-        return {"name": name}
+        return {"name": name, "detail": f"Created new calendar called {name}"}

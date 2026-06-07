@@ -6,7 +6,7 @@ from security   import Authenticator
 from services   import CalDAVService
 from models     import Event
 
-log  = Logger(name="uvicorn", color="green")
+log  = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
 conf = Configurator()
 auth = Authenticator(conf.api_key)
 caldav = CalDAVService(
@@ -19,13 +19,12 @@ app = FastAPI(title="CalDAV API")
 
 @app.get("/health")
 def check_health():
-    log("health")
+    log("Health check")
     return {"status": "ok", "message": "u good my boi"}
 
 @app.get("/random")
 def get_random():
     import random
-    log("random")
     return {"random_number": random.randint(1, 100)}
 
 @app.get("/auth", dependencies=[auth()])  # example: dependencies=[auth(), limit(), audit(), log(), etc.]
@@ -34,7 +33,7 @@ async def test_auth():
     log("AUTHORIZED")
     return {"status": "ok", "message": "API key is valid!"}
 
-@app.post("/test-client")
+@app.post("/test-client", dependencies=[auth()])
 async def test_davclient():
     """
     Test creating an async DAVClient from explicit config.
@@ -54,7 +53,7 @@ async def test_davclient():
 async def create_calendar(name: str):
     result = await caldav.create_calendar(name)
     log(f"Created new calendar {name}")
-    # return result
+    return result
 
 @app.get("/calendars")
 async def list_calendars():

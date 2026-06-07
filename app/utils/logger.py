@@ -35,6 +35,7 @@ class _Logger:
         self._level = logging.INFO
         self._color = ""
         self._logger = logging.getLogger(self._name)
+        self._logger.propagate = False
 
     # COMPATIBLE WITH logging's loggers
     def __call__(self, msg: str = None, name=None, level=None, color=None):
