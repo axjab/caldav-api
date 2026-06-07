@@ -1,5 +1,9 @@
-from os       import getenv
-from security import users
+import os, logging
+
+# Use Uvicorn's logger to match its format exactly
+logger = logging.getLogger("uvicorn")
+MAGENTA = "\033[35m"
+RESET = "\033[0m"
 
 # EXPLANATION:
 # THE GATEWAY IS STATELESS IN THE HTTP SENSE:
@@ -17,15 +21,14 @@ class Configurator:
         self.caldav_url = load_env("CALDAV_URL", required=True)
         self.username   = load_env("CALDAV_USER", required=True)
         self.password   = load_env("CALDAV_PASS", required=True)
-        # do i need this?
-        # self.secret_key = load_env("CALDAV_SECRET_KEY", required=True, validator=lambda v: len(v) >= 32)
+        self.api_key    = load_env("CALDAV_API_KEY", required=True) # validator=lambda v: len(v) >= 32
 
 def load_env(key:str, required=False, validator=None):
-    value = getenv(key)
+    value = os.getenv(key)
     if required and not value: raise ValueError(f"{key} IS REQUIRED")
     if validator and not validator(value): raise ValueError(f"{key} HAS FAILED VALIDATION")
-    print(f"LOADED {key}")
+    logger.info(f"{MAGENTA}LOADED {key}{RESET}")
     return value
 
 def load_file(filename:str, required:bool = False, validator = None):
-    print(f"NOT IMPLEMENTED. LOCATE {filename}, DOING VALIDATION, ETC ETC.....")
+    logger.info(f"{MAGENTA}NOT IMPLEMENTED. LOCATE {filename}, DOING VALIDATION, ETC ETC.....{RESET}")

@@ -1,1 +1,1 @@
-from .config import Configurator
+from .configurator import Configurator

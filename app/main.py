@@ -1,15 +1,20 @@
-from fastapi    import FastAPI, Depends, HTTPException, security, status  # type: ignore
+from fastapi    import FastAPI, Depends, HTTPException, status  # type: ignore
 from caldav     import aio                  # type: ignore
 from typing     import Annotated
-from models     import CalDAVConfig, User
+from models     import Event
 from config     import Configurator
-from security   import Authenticator, Token
+from security   import Authenticator
+from services   import CalDAVService
 
 conf = Configurator()
-auth = Authenticator(
-    # what is my purpose?
+auth = Authenticator(conf.api_key)
+caldav = CalDAVService(
+    url=conf.caldav_url,
+    username=conf.username,
+    password=conf.password
 )
-app = FastAPI()
+
+app = FastAPI(title="CalDAV API")
 
 @app.get("/health")
 def check_health():
@@ -17,39 +22,20 @@ def check_health():
 
 @app.get("/random")
 def get_random():
-    # geenrate random object
     import random
     return {"random_number": random.randint(1, 100)}
 
 # SECURITY =============================================v
-@app.post("/token")
-async def login(
-    form_data: Annotated[security.OAuth2PasswordRequestForm, Depends()],
-) -> Token:
-    user = auth.authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return auth.get_token(user.name)
 
-@app.get("/users/me/")
-async def read_users_me(
-    current_user: Annotated[User, Depends(auth.get_current_user)],
-) -> User:
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    return current_user
+@app.get("/auth", dependencies=[Depends(auth.verify_key())])
+async def auth_test():
+    """Test endpoint to verify API key authentication."""
+    return {"status": "ok", "message": "API key is valid!"}
+
 # SECURITY =============================================^
 
 @app.post("/test-client")
-async def test_davclient(config: CalDAVConfig):
+async def test_davclient():
     """
     Test creating an async DAVClient from explicit config.
     """
@@ -71,14 +57,12 @@ async def test_davclient(config: CalDAVConfig):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.post("/calendar/{name}")
-async def create_calendar(
-    key: Annotated[User, Depends(THE FUCKING API KEY)],
-    name: str,
-):
+@app.post("/calendar/{name}", )
+async def create_calendar(name: str):
     """
-    Create a calendar on a CalDAV server using the provided credentials and calendar name.
+    ?
     """
+
     try:
         client = await aio.get_async_davclient(
             url=conf.caldav_url,
@@ -102,7 +86,7 @@ async def create_calendar(
         return {"status": "error", "message": str(e)}
 
 @app.get("/calendars")
-async def list_calendars(credentials: CalDAVConfig):
+async def list_calendars():
     """
     List calendars on a CalDAV server using the provided credentials.
     """

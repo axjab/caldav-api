@@ -1,2 +1,1 @@
-from .security import Authenticator, Token
-from .db import users
+from .authenticator import Authenticator
