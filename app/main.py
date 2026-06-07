@@ -52,14 +52,14 @@ async def test_davclient():
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.get("/calendars", dependencies=[auth()])
+@app.get("/calendars")
 async def list_calendars():
     result = await caldav.get_calendars()
     return result
 
-@app.get("/calendar", dependencies=[auth()])
-async def get_calendar():
-    result = await caldav.get_calendar()
+@app.get("/calendar/{id}") #TODO auth
+async def get_calendar(id:str):
+    result = await caldav.get_calendar(id)
     return result
 
 @app.post("/calendar/{name}", dependencies=[auth()])
@@ -67,3 +67,17 @@ async def create_calendar(name: str):
     result = await caldav.create_calendar(name)
     log(f"Created new calendar {name}")
     return result
+
+# @app.get("/calendar/{name}/events")                              # GET ALL
+
+# @app.get("/calendars/{calendar_id}/event/{event_id}")            # GET ONE
+
+@app.post("/calendars/{calendar_id}/event")
+async def create_event(calendar_id):
+    result = await caldav.create_event(calendar_id)
+    log(f"{calendar_id}")
+    return result
+
+# @app.put("/calendars/{calendar_id}/event/{event_id}")            # UPDATE
+
+# @app.delete("/calendars/{calendar_id}/event/{event_id}")          #DELETE

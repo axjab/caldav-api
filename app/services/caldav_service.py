@@ -1,5 +1,7 @@
-from utils  import log
+
 from caldav import aio
+from utils  import log
+from datetime import datetime, timezone
 
 class CalDAVService:
     """Encapsulates a single CalDAV server session."""
@@ -40,19 +42,38 @@ class CalDAVService:
         return {
             "calendars": [
                 {
-                    "name": await cal.get_display_name(),
+                    "name": await cal.name,
                     "url": cal.url.url_raw
                 }
                 for cal in calendars
             ]
         }
     
-    async def get_calendar(self):
-        calendars = await self.get_calendars()
-        log(dir(calendars[0]))
+    async def get_calendar(self, id:str):
+        c = await self.get_davclient()
+        # p = await self.get_principal()
+        cal = await c.get_calendars()
+        log(dir(cal))
         return {"x":"FUCK"}
     
     async def create_calendar(self, name:str):
         p = await self.get_principal()
         cal = await p.make_calendar(name)
         return {"name": name, "detail": f"Created new calendar called {name}"}
+
+    # ..... READ here
+
+    async def create_event(self, calendar_id):
+        p = await self.get_principal()
+        calendars = await p.calendars()
+        cal = calendars[7]   # TODO: turn in to calendar object
+        log(cal.name)
+        e = await cal.add_event(
+            uid="zzzzzzzzzzzz",
+            dtstamp=datetime.now(timezone.utc),
+            dtstart=datetime(2026,6,7,8),
+            dtend=datetime(2026,6,7,10),
+            summary="check fastmail",
+            rrule={'FREQ': 'YEARLY'})
+        prop = e.icalendar_component  # turn into event object
+        return {"x":prop}
