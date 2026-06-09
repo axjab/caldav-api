@@ -1,22 +1,44 @@
+from pykit.logging  import Logger
+from pykit.config   import Configurator, env
+from pykit.security import Authenticator
 from fastapi    import FastAPI  # type: ignore
 from caldav     import aio      # type: ignore
-from utils      import Logger
-from config     import Configurator
-from security   import Authenticator
 from services   import CalDAVService
 from models     import Event
 
 # TODO:
 # 1. Check connection on startup
 
+# DEPENDENCIES ========================================
+
+# HOST: MUST PROVIDE CRITICAL VALUES
+conf = Configurator(
+    caldav_url=env("CALDAV_URL", required=True),
+    username=env("CALDAV_USER", required=True),
+    password=env("CALDAV_PASS", required=True),
+    api_key=env("CALDAV_API_KEY", required=True, validator=lambda v: len(v) >= 32),
+    timeout=env("TIMEOUT", default=30),
+    literal_value=42,  # non-env values pass through
+    logger_name="uvicorn",
+    logger_color="green"
+)
+
+# LOG: NEED TO SEE WHAT'S GOING ON
 log  = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
-conf = Configurator()
+
+# AUTH: MUST BLOCK ANONYMOUS USERS
 auth = Authenticator(conf.api_key)
+
 caldav = CalDAVService(
     url=conf.caldav_url,
     username=conf.username,
     password=conf.password
 )
+
+# SERVICE 2: example
+# service2=...
+
+# CODE DOES NOT PROCEED UNLESS UNLESS THESE ARE SORTED FIRST
 
 app = FastAPI(title="CalDAV API")
 
