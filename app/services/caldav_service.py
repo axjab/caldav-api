@@ -1,5 +1,5 @@
 
-from caldav import aio
+from caldav import aio # type: ignore
 from utils  import log
 from datetime import datetime, timezone
 
