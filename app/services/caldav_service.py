@@ -1,6 +1,5 @@
 
 from caldav import aio # type: ignore
-from utils  import log
 from datetime import datetime, timezone
 
 class CalDAVService:
@@ -18,7 +17,7 @@ class CalDAVService:
         self.features = features
         self.davclient = None
         self.principal = None
-    
+
     async def get_davclient(self):
         if self.davclient is None:
             self.davclient = await aio.get_async_davclient(
@@ -29,13 +28,13 @@ class CalDAVService:
             )
         log(f"Connected to {self.url}")
         return self.davclient
-    
+
     async def get_principal(self):
         if self.principal is None:
             client = await self.get_davclient()
             self.principal = await client.get_principal()
         return self.principal
-    
+
     async def get_calendars(self):
         p = await self.get_principal()
         calendars = await p.calendars()
@@ -48,14 +47,14 @@ class CalDAVService:
                 for cal in calendars
             ]
         }
-    
+
     async def get_calendar(self, id:str):
         c = await self.get_davclient()
         # p = await self.get_principal()
         cal = await c.get_calendars()
         log(dir(cal))
         return {"x":"FUCK"}
-    
+
     async def create_calendar(self, name:str):
         p = await self.get_principal()
         cal = await p.make_calendar(name)

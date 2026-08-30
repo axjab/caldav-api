@@ -26,7 +26,7 @@ conf = Configurator(
 # LOG: NEED TO SEE WHAT'S GOING ON
 log = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
 
-log(f"Starting CalDAV API with config: {conf.dict()}")
+log(vars(conf), "CONFIGURATION LOADED")
 
 # AUTH: MUST BLOCK ANONYMOUS USERS
 auth = Authenticator(conf.api_key)
