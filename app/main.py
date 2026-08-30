@@ -1,5 +1,5 @@
+from pykit.config   import Configurator, env # ignore
 from pykit.logging  import Logger
-from pykit.config   import Configurator, env
 from pykit.security import Authenticator
 from fastapi    import FastAPI  # type: ignore
 from caldav     import aio      # type: ignore
