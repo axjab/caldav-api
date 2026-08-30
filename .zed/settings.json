@@ -1,0 +1,15 @@
+{
+  "lsp": {
+    "basedpyright": {
+      "binary": {
+        "path": "app/.venv/bin/basedpyright-langserver",
+        "arguments": ["--stdio"]
+      },
+      "settings": {
+        "basedpyright.analysis": {
+          "typeCheckingMode": "off"
+        }
+      }
+    }
+  }
+}

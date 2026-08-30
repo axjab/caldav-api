@@ -1,8 +1,8 @@
-from pykit.config   import Configurator, env # ignore
-from pykit.logging  import Logger
-from pykit.security import Authenticator
-from fastapi    import FastAPI  # type: ignore
-from caldav     import aio      # type: ignore
+from pykit.configuration    import Configurator, env
+from pykit.logging          import Logger
+from pykit.protection       import Authenticator
+from fastapi    import FastAPI
+from caldav     import aio
 from services   import CalDAVService
 from models     import Event
 
@@ -24,7 +24,9 @@ conf = Configurator(
 )
 
 # LOG: NEED TO SEE WHAT'S GOING ON
-log  = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
+log = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
+
+log(f"Starting CalDAV API with config: {conf.dict()}")
 
 # AUTH: MUST BLOCK ANONYMOUS USERS
 auth = Authenticator(conf.api_key)

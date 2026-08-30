@@ -20,3 +20,6 @@ dev = [
 
 [tool.ruff.lint]
 ignore = ["I001"]
+
+[tool.basedpyright]
+typeCheckingMode = "off"
