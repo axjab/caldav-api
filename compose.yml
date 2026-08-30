@@ -1,0 +1,11 @@
+
+services:
+  caldav:
+    # image: ghcr.io/axjab/caldav:dev
+    image: "caldav:dev"
+    container_name: caldav
+    restart: unless-stopped
+    ports:
+      -
+    # volumes:
+    #   - ./adapter_settings.yaml:/app/src/gateway_manager/configuration/adapter_settings.yaml
