@@ -1,11 +1,16 @@
 
 services:
   caldav:
-    # image: ghcr.io/axjab/caldav:dev
-    image: "caldav:dev"
+    image: ghcr.io/axjab/caldav:broken
+    # image: "caldav:dev"
     container_name: caldav
     restart: unless-stopped
-    ports:
-      -
+    environment:
+      CALDAV_URL: https://caldav.alj.cx
+      CALDAV_USER: ahmad
+      CALDAV_PASS: ${CALDAV_PASS}
+      CALDAV_API_KEY: ${CALDAV_API_KEY}
+    # ports:
+      # -
     # volumes:
     #   - ./adapter_settings.yaml:/app/src/gateway_manager/configuration/adapter_settings.yaml

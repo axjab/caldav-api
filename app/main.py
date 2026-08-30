@@ -11,22 +11,17 @@ from models     import Event
 
 # DEPENDENCIES ========================================
 
-# HOST: MUST PROVIDE CRITICAL VALUES
 conf = Configurator(
     caldav_url=env("CALDAV_URL", required=True),
     username=env("CALDAV_USER", required=True),
     password=env("CALDAV_PASS", required=True),
     api_key=env("CALDAV_API_KEY", required=True, validator=lambda v: len(v) >= 32),
     timeout=env("TIMEOUT", default=30),
-    literal_value=42,  # non-env values pass through
     logger_name="uvicorn",
     logger_color="green"
 )
 
-# LOG: NEED TO SEE WHAT'S GOING ON
-log = Logger(name="uvicorn", color="green")  # paramters dont seem to work as intended
-
-log(vars(conf), "CONFIGURATION LOADED")
+log = Logger(name=conf.logger_name, color=conf.logger_color)  # paramters dont seem to work as intended
 
 # AUTH: MUST BLOCK ANONYMOUS USERS
 auth = Authenticator(conf.api_key)
@@ -36,11 +31,6 @@ caldav = CalDAVService(
     username=conf.username,
     password=conf.password
 )
-
-# SERVICE 2: example
-# service2=...
-
-# CODE DOES NOT PROCEED UNLESS UNLESS THESE ARE SORTED FIRST
 
 app = FastAPI(title="CalDAV API")
 

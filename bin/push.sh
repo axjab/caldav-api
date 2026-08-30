@@ -34,7 +34,7 @@ fi
 
 echo
 echo "Pushing image..."
-docker push "${IMAGE_TAG}"
+sudo docker push "${IMAGE_TAG}"
 
 echo
 echo "==================================="

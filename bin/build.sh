@@ -67,4 +67,4 @@ echo "Image:"
 echo "  ${IMAGE_TAG}"
 echo
 
-docker image ls "${IMAGE}"
+sudo docker image ls "${IMAGE}"
